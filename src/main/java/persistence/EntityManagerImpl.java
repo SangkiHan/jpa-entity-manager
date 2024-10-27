@@ -26,19 +26,19 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public <T> T find(Class<T> clazz, Object id) {
-        EntityKey<T> entitykey = new EntityKey<>(id, clazz);
-        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entitykey);
+        EntityKey<T> entityKey = new EntityKey<>(id, clazz);
+        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
         if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
-            DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entitykey);
+            DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entityKey);
             return clazz.cast(persistDmlBuilderData.getEntityInstance());
         }
 
         T findObject = this.entityLoader.find(clazz, id);
         DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(findObject);
 
-        insertPersistenceContext(entitykey, dmlBuilderData);
-        this.persistenceContext.insertEntityEntryMap(entitykey, EntityStatus.MANAGED);
+        insertPersistenceContext(entityKey, dmlBuilderData);
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
 
         return findObject;
     }
@@ -55,18 +55,21 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void merge(Object entityInstance) {
         DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(entityInstance);
-        this.entityLoader.find(dmlBuilderData.getClazz(), dmlBuilderData.getId());
-
-        DMLBuilderData diffBuilderData = checkDirtyCheck(dmlBuilderData);
-
-        if (diffBuilderData.getColumns().isEmpty()) {
-            return;
-        }
-
-        this.entityPersister.merge(checkDirtyCheck(dmlBuilderData));
-
         EntityKey<?> entityKey = new EntityKey<>(dmlBuilderData.getId(), dmlBuilderData.getClazz());
-        insertPersistenceContext(entityKey, dmlBuilderData);
+
+        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
+
+        if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
+            DMLBuilderData diffBuilderData = checkDirtyCheck(dmlBuilderData);
+
+            if (diffBuilderData.getColumns().isEmpty()) {
+                return;
+            }
+
+            this.entityPersister.merge(checkDirtyCheck(dmlBuilderData));
+
+            insertPersistenceContext(entityKey, dmlBuilderData);
+        }
     }
 
     @Override
