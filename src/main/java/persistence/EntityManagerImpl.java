@@ -27,10 +27,13 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public <T> T find(Class<T> clazz, Object id) {
         EntityKey<T> entitykey = new EntityKey<>(id, clazz);
-        DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entitykey);
-        if (persistDmlBuilderData != null) {
+        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entitykey);
+
+        if (entityEntry != null && entityEntry.equalsEntityStatus(EntityStatus.MANAGED)) {
+            DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entitykey);
             return clazz.cast(persistDmlBuilderData.getEntityInstance());
         }
+
         T findObject = this.entityLoader.find(clazz, id);
         DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(findObject);
 
