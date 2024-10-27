@@ -22,4 +22,4 @@
 - [X] DirtyCheck를 하여 쿼리를 생성한다.
 
 ### 4단계 - EntityEntry
-- [ ] 영속성 컨텍스트에서 EntityStatus를 저장 후 저장되어있는 EntityEntry 객체를 가져온다.
+- [X] 영속성 컨텍스트에서 EntityStatus를 저장 후 저장되어있는 EntityEntry 객체를 가져온다.
