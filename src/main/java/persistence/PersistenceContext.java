@@ -1,15 +1,21 @@
 package persistence;
 
+import builder.dml.DMLBuilderData;
+
 public interface PersistenceContext {
 
-    Object findEntity(EntityKey<?> entityKey);
+    DMLBuilderData findEntity(EntityKey<?> entityKey);
 
-    void insertEntity(EntityKey<?> entityKey, Object object);
+    void insertEntity(EntityKey<?> entityKey, DMLBuilderData dmlBuilderData);
 
     void deleteEntity(EntityKey<?> entityKey);
 
-    void insertDatabaseSnapshot(EntityKey<?> entityKey, Object object);
+    void insertDatabaseSnapshot(EntityKey<?> entityKey, DMLBuilderData dmlBuilderData);
 
-    Object getDatabaseSnapshot(EntityKey<?> entityKey);
+    DMLBuilderData getDatabaseSnapshot(EntityKey<?> entityKey);
+
+    void insertEntityEntryMap(EntityKey<?> entityKey, EntityStatus entityStatus);
+
+    EntityEntry getEntityEntryMap(EntityKey<?> entityKey);
 
 }
