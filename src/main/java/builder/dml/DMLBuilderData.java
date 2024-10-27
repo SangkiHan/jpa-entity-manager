@@ -6,6 +6,8 @@ import util.StringUtil;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DMLBuilderData {
@@ -18,16 +20,10 @@ public class DMLBuilderData {
 
     private final String tableName;
     private List<DMLColumnData> columns;
-    private String pkName;
-    private Object id;
-    private Class<?> clazz;
-
-    private <T> DMLBuilderData(Class<T> clazz) {
-        confirmEntityAnnotation(clazz);
-        this.clazz = clazz;
-        this.tableName = getTableName(clazz);
-        this.columns = getEntityColumnData(clazz);
-    }
+    private final String pkName;
+    private final Object id;
+    private final Class<?> clazz;
+    private Object entityInstance;
 
     private DMLBuilderData(Object entityInstance) {
         this.clazz = entityInstance.getClass();
@@ -36,6 +32,7 @@ public class DMLBuilderData {
         this.columns = getInstanceColumnData(entityInstance);
         this.id = getPkValue();
         this.pkName = getPkName();
+        this.entityInstance = deepCopy(entityInstance);
     }
 
     private <T> DMLBuilderData(Class<T> clazz, Object id) {
@@ -73,6 +70,10 @@ public class DMLBuilderData {
 
     public Class<?> getClazz() {
         return clazz;
+    }
+
+    public Object getEntityInstance() {
+        return entityInstance;
     }
 
     public String wrapString() {
@@ -121,7 +122,22 @@ public class DMLBuilderData {
         return this;
     }
 
-    //Entity Class의 컬럼명과 컬럼데이터타입을 가져온다.
+    public List<DMLColumnData> getDifferentColumns(DMLBuilderData snapShotBuilderData) {
+        Map<String, DMLColumnData> snapShotColumnMap = convertDMLColumnDataMap(snapShotBuilderData);
+
+        return this.columns.stream()
+                .filter(entityColumn -> {
+                    DMLColumnData persistenceColumn = snapShotColumnMap.get(entityColumn.getColumnName());
+                    return !entityColumn.getColumnValue().equals(persistenceColumn.getColumnValue());
+                })
+                .toList();
+    }
+
+    private Map<String, DMLColumnData> convertDMLColumnDataMap(DMLBuilderData dmlBuilderData) {
+        return dmlBuilderData.getColumns().stream()
+                .collect(Collectors.toMap(DMLColumnData::getColumnName, Function.identity()));
+    }
+
     private List<DMLColumnData> getEntityColumnData(Class<?> entityClass) {
         Field[] fields = entityClass.getDeclaredFields();
         List<DMLColumnData> DMLColumnDataList = new ArrayList<>();
@@ -132,7 +148,6 @@ public class DMLBuilderData {
         return DMLColumnDataList;
     }
 
-    //Entity 인스턴스의 컬럼명과 컬럼데이터타입, 컬럼데이터를 가져온다.
     private <T> List<DMLColumnData> getInstanceColumnData(T entityInstance) {
         Field[] fields = this.clazz.getDeclaredFields();
         List<DMLColumnData> DMLColumnDataList = new ArrayList<>();
@@ -143,14 +158,12 @@ public class DMLBuilderData {
         return DMLColumnDataList;
     }
 
-    //Id 어노테이션을 primarykey로 가져온다.
     private void getEntityPrimaryKey(List<DMLColumnData> DMLColumnDataList, Field field) {
         if (field.isAnnotationPresent(Id.class)) {
             DMLColumnDataList.add(DMLColumnData.creatInstancePkColumn(field.getName(), field.getType()));
         }
     }
 
-    //Id 어노테이션을 primarykey로 가져온다.
     private <T> void getInstancePrimaryKey(List<DMLColumnData> DMLColumnDataList, Field field, T entityInstance) {
         try {
             if (field.isAnnotationPresent(Id.class)) {
@@ -162,7 +175,6 @@ public class DMLBuilderData {
         }
     }
 
-    //Entity 내부 필드를 확인하여 필드명을 가져온다.
     private void createDMLEntityColumnData(List<DMLColumnData> DMLColumnDataList, Field field) {
         if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(Id.class))
             return; // @Transient인 경우 검증하지 않음
@@ -177,7 +189,6 @@ public class DMLBuilderData {
         DMLColumnDataList.add(DMLColumnData.createEntityColumn(columnName));
     }
 
-    //인스턴스 내부 데이터를 확인하여 컬럼 데이터를 가져온다.
     private <T> void createDMLInstanceColumnData(List<DMLColumnData> DMLColumnDataList, Field field, T entityInstance) {
         if (field.isAnnotationPresent(Transient.class) || field.isAnnotationPresent(Id.class))
             return; // @Transient인 경우 검증하지 않음
@@ -198,14 +209,12 @@ public class DMLBuilderData {
         }
     }
 
-    //Entity 어노테이션 여부를 확인한다.
     private void confirmEntityAnnotation(Class<?> entityClass) {
         if (!entityClass.isAnnotationPresent(Entity.class)) {
             throw new IllegalArgumentException(NOT_EXIST_ENTITY_ANNOTATION);
         }
     }
 
-    //Table 어노테이션 여부를 확인한다.
     private String getTableName(Class<?> entityClass) {
         if (entityClass.isAnnotationPresent(Table.class)) {
             Table table = entityClass.getAnnotation(Table.class);
@@ -214,13 +223,31 @@ public class DMLBuilderData {
         return entityClass.getSimpleName();
     }
 
-    //PkValue를 가져온다.
     private Object getPkValue() {
         return this.columns.stream()
                 .filter(DMLColumnData::isPrimaryKey)
                 .findFirst()
                 .map(DMLColumnData::getColumnValue)
                 .orElseThrow(() -> new IllegalArgumentException(PK_NOT_EXIST_MESSAGE));
+    }
+
+    private Object deepCopy(Object original) {
+        if (original == null) return null;
+
+        try {
+            Class<?> clazz = original.getClass();
+            Object copy = clazz.getDeclaredConstructor().newInstance();
+
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+
+                Object value = field.get(original);
+                field.set(copy, value);
+            }
+            return copy;
+        } catch (Exception e) {
+            throw new RuntimeException("Deep copy failed", e);
+        }
     }
 
 }
