@@ -29,7 +29,7 @@ public class EntityManagerImpl implements EntityManager {
         EntityKey<T> entitykey = new EntityKey<>(id, clazz);
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entitykey);
 
-        if (entityEntry != null && entityEntry.equalsEntityStatus(EntityStatus.MANAGED)) {
+        if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
             DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entitykey);
             return clazz.cast(persistDmlBuilderData.getEntityInstance());
         }

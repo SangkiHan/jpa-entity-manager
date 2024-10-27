@@ -8,7 +8,7 @@ public class EntityEntry {
         this.entityStatus = entityStatus;
     }
 
-    public boolean equalsEntityStatus(EntityStatus entityStatus) {
+    public boolean checkEntityStatus(EntityStatus entityStatus) {
         return this.entityStatus.equals(entityStatus);
     }
 }
