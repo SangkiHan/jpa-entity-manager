@@ -1,12 +1,24 @@
 package builder;
 
+import builder.ddl.DDLBuilderData;
+import builder.ddl.builder.CreateQueryBuilder;
+import builder.ddl.builder.DropQueryBuilder;
+import builder.ddl.dataType.DB;
 import builder.dml.DMLBuilderData;
 import builder.dml.builder.*;
+import database.H2DBConnection;
 import entity.Person;
+import jdbc.JdbcTemplate;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import persistence.*;
+
+import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 /*
 - insert 쿼리 문자열 생성하기
@@ -17,7 +29,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 - deleteById 쿼리 문자열 생성하기
 - Object를 받아 deleteById 쿼리 문자열 생성한다.
 */
-class H2QDMLBuilderTest {
+class DMLBuilderTest {
+
+    private EntityManager entityManager;
+    private PersistenceContext persistenceContext;
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        H2DBConnection h2DBConnection = new H2DBConnection();
+        JdbcTemplate jdbcTemplate = h2DBConnection.start();
+
+        this.persistenceContext = new PersistenceContextImpl();
+
+        this.entityManager = new EntityManagerImpl(persistenceContext, jdbcTemplate);
+    }
 
     @DisplayName("Insert 쿼리 문자열 생성하기")
     @Test
@@ -111,4 +136,5 @@ class H2QDMLBuilderTest {
         assertThat(queryBuilder.buildQuery(DMLBuilderData.createDMLBuilderData(person)))
                 .isEqualTo("DELETE FROM users WHERE id = 1;");
     }
+
 }

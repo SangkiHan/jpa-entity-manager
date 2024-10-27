@@ -22,31 +22,18 @@ public class EntityPersister {
     }
 
     //데이터를 반영한다.
-    public void persist(Object entityInstance) {
-        jdbcTemplate.execute(insertQueryBuilder.buildQuery(DMLBuilderData.createDMLBuilderData(entityInstance)));
+    public void persist(DMLBuilderData dmlBuilderData) {
+        jdbcTemplate.execute(insertQueryBuilder.buildQuery(dmlBuilderData));
     }
 
     //데이터를 수정한다.
-    public void merge(Object entityInstance) {
-        confirmEntityDataExist(entityInstance);
-        jdbcTemplate.execute(updateQueryBuilder.buildQuery(DMLBuilderData.createDMLBuilderData(entityInstance)));
+    public void merge(DMLBuilderData dmlBuilderData) {
+        jdbcTemplate.execute(updateQueryBuilder.buildQuery(dmlBuilderData));
     }
 
     //데이터를 제거한다.
-    public void remove(Object entityInstance) {
-        jdbcTemplate.execute(deleteQueryBuilder.buildQuery(DMLBuilderData.createDMLBuilderData(entityInstance)));
+    public void remove(DMLBuilderData dmlBuilderData) {
+        jdbcTemplate.execute(deleteQueryBuilder.buildQuery(dmlBuilderData));
     }
 
-    //조회되는 데이터가 존재하는지 확인한다.
-    private void confirmEntityDataExist(Object entityInstance) {
-        SelectByIdQueryBuilder queryBuilder = new SelectByIdQueryBuilder();
-        try {
-            jdbcTemplate.queryForObject(
-                    queryBuilder.buildQuery(DMLBuilderData.createDMLBuilderData(entityInstance)),
-                    resultSet -> EntityMapper.mapRow(resultSet, entityInstance.getClass())
-            );
-        } catch (RuntimeException e) {
-            throw new RuntimeException(DATA_NOT_EXIST_MESSAGE + entityInstance.getClass().getSimpleName());
-        }
-    }
 }

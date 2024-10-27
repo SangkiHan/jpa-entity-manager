@@ -15,11 +15,14 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 
 /*
 - Persist로 Person 저장 후 영속성 컨텍스트에 존재하는지 확인한다.
 - remove 실행하면 영속성 컨텍스트에 데이터가 제거된다.
 - update 실행하면 영속성컨텍스트 데이터도 수정된다.
+- update 실행하면 snapShot 데이터도 수정된다.
 */
 class EntityManagerTest {
 
@@ -58,8 +61,8 @@ class EntityManagerTest {
     void findTest() {
         Person person = createPerson(1);
         this.entityManager.persist(person);
-
-        assertThat(this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass())))
+        Object object = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        assertThat(object)
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
     }
@@ -83,7 +86,25 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        assertThat(this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass())))
+        Object persons = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+
+        assertThat(persons)
+                .extracting("id", "name", "age", "email")
+                .contains(1L, "test1", 29, "changed@test.com");
+    }
+
+    @DisplayName("update 실행하면 snapShot 데이터도 수정된다.")
+    @Test
+    void updateSnapShotTest() {
+        Person person = createPerson(1);
+        this.entityManager.persist(person);
+
+        person.changeEmail("changed@test.com");
+        this.entityManager.merge(person);
+
+        Object persons = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
+
+        assertThat(persons)
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "changed@test.com");
     }
