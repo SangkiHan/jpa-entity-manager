@@ -4,6 +4,7 @@ import builder.ddl.DDLBuilderData;
 import builder.ddl.builder.CreateQueryBuilder;
 import builder.ddl.builder.DropQueryBuilder;
 import builder.ddl.dataType.DB;
+import builder.dml.DMLBuilderData;
 import database.H2DBConnection;
 import entity.Person;
 import jdbc.JdbcTemplate;
@@ -61,8 +62,8 @@ class EntityManagerTest {
     void findTest() {
         Person person = createPerson(1);
         this.entityManager.persist(person);
-        Object object = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
-        assertThat(object)
+        DMLBuilderData dmlBuilderData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        assertThat(dmlBuilderData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
     }
@@ -86,9 +87,9 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        Object persons = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        DMLBuilderData dmlBuilderData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
 
-        assertThat(persons)
+        assertThat(dmlBuilderData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "changed@test.com");
     }
@@ -102,9 +103,9 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        Object persons = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
+        DMLBuilderData dmlBuilderData = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
 
-        assertThat(persons)
+        assertThat(dmlBuilderData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "changed@test.com");
     }
