@@ -1,6 +1,6 @@
 package builder.dml.builder;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 
 public class InsertQueryBuilder {
 
@@ -10,15 +10,15 @@ public class InsertQueryBuilder {
     private final static String VALUES = "{values}";
 
     //insert 쿼리를 생성한다. Insert 쿼리는 인스턴스의 데이터를 받아야함
-    public String buildQuery(DMLBuilderData dmlBuilderData) {
-        return insertQuery(dmlBuilderData);
+    public String buildQuery(EntityData EntityData) {
+        return insertQuery(EntityData);
     }
 
     //insert쿼리문을 생성한다.
-    private String insertQuery(DMLBuilderData dmlBuilderData) {
-        return INSERT_QUERY.replace(TABLE_NAME, dmlBuilderData.getTableName())
-                .replace(COLUMN_NAMES, dmlBuilderData.getColumnNames())
-                .replace(VALUES, dmlBuilderData.getColumnValues());
+    private String insertQuery(EntityData EntityData) {
+        return INSERT_QUERY.replace(TABLE_NAME, EntityData.getTableName())
+                .replace(COLUMN_NAMES, EntityData.getColumnNames())
+                .replace(VALUES, EntityData.getColumnValues());
     }
 
 }

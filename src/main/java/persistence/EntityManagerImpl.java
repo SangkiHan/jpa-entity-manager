@@ -1,6 +1,6 @@
 package persistence;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 import builder.dml.DMLColumnData;
 import jdbc.JdbcTemplate;
 
@@ -30,14 +30,14 @@ public class EntityManagerImpl implements EntityManager {
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
         if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
-            DMLBuilderData persistDmlBuilderData = this.persistenceContext.findEntity(entityKey);
-            return clazz.cast(persistDmlBuilderData.getEntityInstance());
+            EntityData persistEntityData = this.persistenceContext.findEntity(entityKey);
+            return clazz.cast(persistEntityData.getEntityInstance());
         }
 
         T findObject = this.entityLoader.find(clazz, id);
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(findObject);
+        EntityData entityData = EntityData.createEntityData(findObject);
 
-        insertPersistenceContext(entityKey, dmlBuilderData);
+        insertPersistenceContext(entityKey, entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
 
         return findObject;
@@ -45,53 +45,53 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void persist(Object entityInstance) {
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(entityInstance);
-        this.entityPersister.persist(dmlBuilderData);
-        EntityKey<?> entityKey = new EntityKey<>(dmlBuilderData.getId(), dmlBuilderData.getClazz());
-        insertPersistenceContext(entityKey, dmlBuilderData);
+        EntityData entityData = EntityData.createEntityData(entityInstance);
+        this.entityPersister.persist(entityData);
+        EntityKey<?> entityKey = new EntityKey<>(entityData.getId(), entityData.getClazz());
+        insertPersistenceContext(entityKey, entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
     }
 
     @Override
     public void merge(Object entityInstance) {
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(entityInstance);
-        EntityKey<?> entityKey = new EntityKey<>(dmlBuilderData.getId(), dmlBuilderData.getClazz());
+        EntityData entityData = EntityData.createEntityData(entityInstance);
+        EntityKey<?> entityKey = new EntityKey<>(entityData.getId(), entityData.getClazz());
 
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
         if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
-            DMLBuilderData diffBuilderData = checkDirtyCheck(dmlBuilderData);
+            EntityData diffBuilderData = checkDirtyCheck(entityData);
 
             if (diffBuilderData.getColumns().isEmpty()) {
                 return;
             }
 
-            this.entityPersister.merge(checkDirtyCheck(dmlBuilderData));
+            this.entityPersister.merge(checkDirtyCheck(entityData));
 
-            insertPersistenceContext(entityKey, dmlBuilderData);
+            insertPersistenceContext(entityKey, entityData);
         }
     }
 
     @Override
     public void remove(Object entityInstance) {
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(entityInstance);
-        this.entityPersister.remove(dmlBuilderData);
-        this.persistenceContext.deleteEntity(new EntityKey<>(dmlBuilderData.getId(), entityInstance.getClass()));
-        this.persistenceContext.insertEntityEntryMap(new EntityKey<>(dmlBuilderData.getId(), dmlBuilderData.getClazz()), EntityStatus.DELETED);
+        EntityData entityData = EntityData.createEntityData(entityInstance);
+        this.entityPersister.remove(entityData);
+        this.persistenceContext.deleteEntity(new EntityKey<>(entityData.getId(), entityData.getClazz()));
+        this.persistenceContext.insertEntityEntryMap(new EntityKey<>(entityData.getId(), entityData.getClazz()), EntityStatus.DELETED);
     }
 
-    private DMLBuilderData checkDirtyCheck(DMLBuilderData entityBuilderData) {
+    private EntityData checkDirtyCheck(EntityData entityBuilderData) {
         EntityKey<?> entityKey = new EntityKey<>(entityBuilderData.getId(), entityBuilderData.getClazz());
 
-        DMLBuilderData snapshotDmlBuilderData = this.persistenceContext.getDatabaseSnapshot(entityKey);
+        EntityData snapshotEntityData = this.persistenceContext.getDatabaseSnapshot(entityKey);
 
-        List<DMLColumnData> differentColumns = entityBuilderData.getDifferentColumns(snapshotDmlBuilderData);
+        List<DMLColumnData> differentColumns = entityBuilderData.getDifferentColumns(snapshotEntityData);
 
         return entityBuilderData.changeColumns(differentColumns);
     }
 
-    private void insertPersistenceContext(EntityKey<?> entityKey, DMLBuilderData dmlBuilderData) {
-        this.persistenceContext.insertEntity(entityKey, dmlBuilderData);
-        this.persistenceContext.insertDatabaseSnapshot(entityKey, dmlBuilderData);
+    private void insertPersistenceContext(EntityKey<?> entityKey, EntityData EntityData) {
+        this.persistenceContext.insertEntity(entityKey, EntityData);
+        this.persistenceContext.insertDatabaseSnapshot(entityKey, EntityData);
     }
 }

@@ -1,6 +1,6 @@
 package builder.dml.builder;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 
 public class UpdateQueryBuilder {
 
@@ -10,16 +10,16 @@ public class UpdateQueryBuilder {
     private final static String ENTITY_PK_NAME = "{entityPkName}";
     private final static String COLUMN_DEFINITIONS = "{columnDefinitions}";
 
-    public String buildQuery(DMLBuilderData dmlBuilderData) {
-        return updateByIdQuery(dmlBuilderData);
+    public String buildQuery(EntityData EntityData) {
+        return updateByIdQuery(EntityData);
     }
 
     //update 쿼리를 생성한다.
-    private String updateByIdQuery(DMLBuilderData dmlBuilderData) {
+    private String updateByIdQuery(EntityData EntityData) {
         // 최종 SQL 쿼리 생성
-        return UPDATE_BY_ID_QUERY.replace(TABLE_NAME, dmlBuilderData.getTableName())
-                .replace(COLUMN_DEFINITIONS, dmlBuilderData.getColumnDefinitions())
-                .replace(ENTITY_PK_NAME, dmlBuilderData.getPkNm())
-                .replace(VALUES, String.valueOf(dmlBuilderData.wrapString()));
+        return UPDATE_BY_ID_QUERY.replace(TABLE_NAME, EntityData.getTableName())
+                .replace(COLUMN_DEFINITIONS, EntityData.getColumnDefinitions())
+                .replace(ENTITY_PK_NAME, EntityData.getPkNm())
+                .replace(VALUES, String.valueOf(EntityData.wrapString()));
     }
 }

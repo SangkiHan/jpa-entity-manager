@@ -1,6 +1,6 @@
 package persistence;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 import entity.Person;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,9 +25,9 @@ class PersistenceContextImplTest {
         Person person = createPerson(1);
         EntityKey<Person> EntityKey = new EntityKey<>(1, Person.class);
 
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(person);
+        EntityData entityData = EntityData.createEntityData(person);
 
-        persistenceContext.insertEntity(EntityKey, dmlBuilderData);
+        persistenceContext.insertEntity(EntityKey, entityData);
 
         assertThat(persistenceContext.findEntity(new EntityKey<>(1, Person.class)).getEntityInstance())
                 .extracting("id", "name", "age", "email")
@@ -39,8 +39,8 @@ class PersistenceContextImplTest {
     void removeTest() {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(person);
-        IntStream.range(1,3).forEach(i -> persistenceContext.insertEntity(new EntityKey<>(i, Person.class), dmlBuilderData));
+        EntityData entityData = EntityData.createEntityData(person);
+        IntStream.range(1,3).forEach(i -> persistenceContext.insertEntity(new EntityKey<>(i, Person.class), entityData));
 
         persistenceContext.deleteEntity(new EntityKey<>(2, Person.class));
 
@@ -52,8 +52,8 @@ class PersistenceContextImplTest {
     void addDatabaseSnapshotTest() {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(person);
-        IntStream.range(1,3).forEach(i -> persistenceContext.insertDatabaseSnapshot(new EntityKey<>(i, Person.class), dmlBuilderData));
+        EntityData entityData = EntityData.createEntityData(person);
+        IntStream.range(1,3).forEach(i -> persistenceContext.insertDatabaseSnapshot(new EntityKey<>(i, Person.class), entityData));
 
         assertThat(persistenceContext.findEntity(new EntityKey<>(2, Person.class))).isNull();
     }
@@ -63,8 +63,8 @@ class PersistenceContextImplTest {
     void getDatabaseSnapshotTest() {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
-        DMLBuilderData dmlBuilderData = DMLBuilderData.createDMLBuilderData(person);
-        persistenceContext.insertDatabaseSnapshot(new EntityKey<>(person.getId(), Person.class), dmlBuilderData);
+        EntityData entityData = EntityData.createEntityData(person);
+        persistenceContext.insertDatabaseSnapshot(new EntityKey<>(person.getId(), Person.class), entityData);
         assertThat(persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), Person.class)).getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");

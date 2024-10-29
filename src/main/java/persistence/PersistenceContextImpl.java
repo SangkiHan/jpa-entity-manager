@@ -1,6 +1,6 @@
 package persistence;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -8,18 +8,18 @@ import java.util.Map;
 
 public class PersistenceContextImpl implements PersistenceContext {
 
-    private final Map<EntityKey<?>, DMLBuilderData> entityMap = new HashMap<>();
-    private final Map<EntityKey<?>, DMLBuilderData> snapShotMap = new HashMap<>();
+    private final Map<EntityKey<?>, EntityData> entityMap = new HashMap<>();
+    private final Map<EntityKey<?>, EntityData> snapShotMap = new HashMap<>();
     private final Map<EntityKey<?>, EntityEntry> entityEntryMap = new HashMap<>();
 
     @Override
-    public DMLBuilderData findEntity(EntityKey<?> entityKey) {
+    public EntityData findEntity(EntityKey<?> entityKey) {
         return entityMap.get(entityKey);
     }
 
     @Override
-    public void insertEntity(EntityKey<?> entityKey, DMLBuilderData dmlBuilderData) {
-        this.entityMap.put(entityKey, dmlBuilderData);
+    public void insertEntity(EntityKey<?> entityKey, EntityData EntityData) {
+        this.entityMap.put(entityKey, EntityData);
     }
 
     @Override
@@ -28,12 +28,12 @@ public class PersistenceContextImpl implements PersistenceContext {
     }
 
     @Override
-    public void insertDatabaseSnapshot(EntityKey<?> entityKey, DMLBuilderData dmlBuilderData) {
-        this.snapShotMap.put(entityKey, dmlBuilderData);
+    public void insertDatabaseSnapshot(EntityKey<?> entityKey, EntityData EntityData) {
+        this.snapShotMap.put(entityKey, EntityData);
     }
 
     @Override
-    public DMLBuilderData getDatabaseSnapshot(EntityKey<?> entityKey) {
+    public EntityData getDatabaseSnapshot(EntityKey<?> entityKey) {
         return this.snapShotMap.get(entityKey);
     }
 

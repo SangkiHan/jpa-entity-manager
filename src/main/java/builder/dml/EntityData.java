@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DMLBuilderData {
+public class EntityData {
 
     private final static String PK_NOT_EXIST_MESSAGE = "PK 컬럼을 찾을 수 없습니다.";
     private final static String NOT_EXIST_ENTITY_ANNOTATION = "@Entity 어노테이션이 존재하지 않습니다.";
@@ -25,7 +25,7 @@ public class DMLBuilderData {
     private final Class<?> clazz;
     private Object entityInstance;
 
-    private DMLBuilderData(Object entityInstance) {
+    private EntityData(Object entityInstance) {
         this.clazz = entityInstance.getClass();
         confirmEntityAnnotation(this.clazz);
         this.tableName = getTableName(this.clazz);
@@ -35,7 +35,7 @@ public class DMLBuilderData {
         this.entityInstance = deepCopy(entityInstance);
     }
 
-    private <T> DMLBuilderData(Class<T> clazz, Object id) {
+    private <T> EntityData(Class<T> clazz, Object id) {
         confirmEntityAnnotation(clazz);
         this.clazz = clazz;
         this.tableName = getTableName(clazz);
@@ -44,12 +44,12 @@ public class DMLBuilderData {
         this.pkName = getPkName();
     }
 
-    public static DMLBuilderData createDMLBuilderData(Object entityInstance) {
-        return new DMLBuilderData(entityInstance);
+    public static EntityData createEntityData(Object entityInstance) {
+        return new EntityData(entityInstance);
     }
 
-    public static <T> DMLBuilderData createDMLBuilderData(Class<T> clazz, Object id) {
-        return new DMLBuilderData(clazz, id);
+    public static <T> EntityData createEntityData(Class<T> clazz, Object id) {
+        return new EntityData(clazz, id);
     }
 
     public String getTableName() {
@@ -117,12 +117,12 @@ public class DMLBuilderData {
                 .orElseThrow(() -> new RuntimeException(PK_NOT_EXIST_MESSAGE));
     }
 
-    public DMLBuilderData changeColumns(List<DMLColumnData> columns) {
+    public EntityData changeColumns(List<DMLColumnData> columns) {
         this.columns = columns;
         return this;
     }
 
-    public List<DMLColumnData> getDifferentColumns(DMLBuilderData snapShotBuilderData) {
+    public List<DMLColumnData> getDifferentColumns(EntityData snapShotBuilderData) {
         Map<String, DMLColumnData> snapShotColumnMap = convertDMLColumnDataMap(snapShotBuilderData);
 
         return this.columns.stream()
@@ -133,8 +133,8 @@ public class DMLBuilderData {
                 .toList();
     }
 
-    private Map<String, DMLColumnData> convertDMLColumnDataMap(DMLBuilderData dmlBuilderData) {
-        return dmlBuilderData.getColumns().stream()
+    private Map<String, DMLColumnData> convertDMLColumnDataMap(EntityData EntityData) {
+        return EntityData.getColumns().stream()
                 .collect(Collectors.toMap(DMLColumnData::getColumnName, Function.identity()));
     }
 

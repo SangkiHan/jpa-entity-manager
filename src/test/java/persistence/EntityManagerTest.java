@@ -4,7 +4,7 @@ import builder.ddl.DDLBuilderData;
 import builder.ddl.builder.CreateQueryBuilder;
 import builder.ddl.builder.DropQueryBuilder;
 import builder.ddl.dataType.DB;
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 import database.H2DBConnection;
 import entity.Person;
 import jdbc.JdbcTemplate;
@@ -62,8 +62,8 @@ class EntityManagerTest {
     void findTest() {
         Person person = createPerson(1);
         this.entityManager.persist(person);
-        DMLBuilderData dmlBuilderData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
-        assertThat(dmlBuilderData.getEntityInstance())
+        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
     }
@@ -87,9 +87,9 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        DMLBuilderData dmlBuilderData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
 
-        assertThat(dmlBuilderData.getEntityInstance())
+        assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "changed@test.com");
     }
@@ -103,9 +103,9 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        DMLBuilderData dmlBuilderData = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
+        EntityData EntityData = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
 
-        assertThat(dmlBuilderData.getEntityInstance())
+        assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "changed@test.com");
     }
