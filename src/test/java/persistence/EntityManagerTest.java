@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.groups.Tuple.tuple;
 
 /*
 - Persist로 Person 저장 후 영속성 컨텍스트에 존재하는지 확인한다.
@@ -62,7 +60,7 @@ class EntityManagerTest {
     void findTest() {
         Person person = createPerson(1);
         this.entityManager.persist(person);
-        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey(person.getId(), person.getClass()));
         assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
@@ -75,7 +73,7 @@ class EntityManagerTest {
         this.entityManager.persist(person);
         this.entityManager.remove(person);
 
-        assertThat(this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()))).isNull();
+        assertThat(this.persistenceContext.findEntity(new EntityKey(person.getId(), person.getClass()))).isNull();
     }
 
     @DisplayName("update 실행하면 영속성컨텍스트 데이터도 수정된다.")
@@ -87,7 +85,7 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey<>(person.getId(), person.getClass()));
+        EntityData EntityData = this.persistenceContext.findEntity(new EntityKey(person.getId(), person.getClass()));
 
         assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")
@@ -103,7 +101,7 @@ class EntityManagerTest {
         person.changeEmail("changed@test.com");
         this.entityManager.merge(person);
 
-        EntityData EntityData = this.persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), person.getClass()));
+        EntityData EntityData = this.persistenceContext.getDatabaseSnapshot(new EntityKey(person.getId(), person.getClass()));
 
         assertThat(EntityData.getEntityInstance())
                 .extracting("id", "name", "age", "email")

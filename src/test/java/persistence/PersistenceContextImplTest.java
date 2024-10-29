@@ -23,13 +23,13 @@ class PersistenceContextImplTest {
     void insertFindTest() {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
-        EntityKey<Person> EntityKey = new EntityKey<>(1, Person.class);
+        EntityKey EntityKey = new EntityKey(1, Person.class);
 
         EntityData entityData = EntityData.createEntityData(person);
 
         persistenceContext.insertEntity(EntityKey, entityData);
 
-        assertThat(persistenceContext.findEntity(new EntityKey<>(1, Person.class)).getEntityInstance())
+        assertThat(persistenceContext.findEntity(new EntityKey(1, Person.class)).getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
     }
@@ -40,11 +40,11 @@ class PersistenceContextImplTest {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
         EntityData entityData = EntityData.createEntityData(person);
-        IntStream.range(1,3).forEach(i -> persistenceContext.insertEntity(new EntityKey<>(i, Person.class), entityData));
+        IntStream.range(1,3).forEach(i -> persistenceContext.insertEntity(new EntityKey(i, Person.class), entityData));
 
-        persistenceContext.deleteEntity(new EntityKey<>(2, Person.class));
+        persistenceContext.deleteEntity(new EntityKey(2, Person.class));
 
-        assertThat(persistenceContext.findEntity(new EntityKey<>(2, Person.class))).isNull();
+        assertThat(persistenceContext.findEntity(new EntityKey(2, Person.class))).isNull();
     }
 
     @DisplayName("영속성 컨텍스트에서 스냅샷을 생성한다.")
@@ -53,9 +53,9 @@ class PersistenceContextImplTest {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
         EntityData entityData = EntityData.createEntityData(person);
-        IntStream.range(1,3).forEach(i -> persistenceContext.insertDatabaseSnapshot(new EntityKey<>(i, Person.class), entityData));
+        IntStream.range(1,3).forEach(i -> persistenceContext.insertDatabaseSnapshot(new EntityKey(i, Person.class), entityData));
 
-        assertThat(persistenceContext.findEntity(new EntityKey<>(2, Person.class))).isNull();
+        assertThat(persistenceContext.findEntity(new EntityKey(2, Person.class))).isNull();
     }
 
     @DisplayName("영속성 컨텍스트에서 스냅샷을 가져온다.")
@@ -64,8 +64,8 @@ class PersistenceContextImplTest {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
         Person person = createPerson(1);
         EntityData entityData = EntityData.createEntityData(person);
-        persistenceContext.insertDatabaseSnapshot(new EntityKey<>(person.getId(), Person.class), entityData);
-        assertThat(persistenceContext.getDatabaseSnapshot(new EntityKey<>(person.getId(), Person.class)).getEntityInstance())
+        persistenceContext.insertDatabaseSnapshot(new EntityKey(person.getId(), Person.class), entityData);
+        assertThat(persistenceContext.getDatabaseSnapshot(new EntityKey(person.getId(), Person.class)).getEntityInstance())
                 .extracting("id", "name", "age", "email")
                 .contains(1L, "test1", 29, "test@test.com");
     }
@@ -74,10 +74,10 @@ class PersistenceContextImplTest {
     @Test
     void insertEntityEntryMapTest() {
         PersistenceContextImpl persistenceContext = new PersistenceContextImpl();
-        Person person = createPerson(1);
+        EntityKey entityKey = new EntityKey(1, Person.class);
 
-        persistenceContext.insertEntityEntryMap(new EntityKey<>(person.getId(), Person.class), EntityStatus.MANAGED);
-        assertThat(persistenceContext.getEntityEntryMap(new EntityKey<>(person.getId(), Person.class)))
+        persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
+        assertThat(persistenceContext.getEntityEntryMap(entityKey))
                 .extracting("entityStatus").isEqualTo(EntityStatus.MANAGED);
     }
 

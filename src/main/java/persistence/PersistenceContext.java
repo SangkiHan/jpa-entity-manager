@@ -4,18 +4,18 @@ import builder.dml.EntityData;
 
 public interface PersistenceContext {
 
-    EntityData findEntity(EntityKey<?> entityKey);
+    EntityData findEntity(EntityKey entityKey);
 
-    void insertEntity(EntityKey<?> entityKey, EntityData EntityData);
+    void insertEntity(EntityKey entityKey, EntityData EntityData);
 
-    void deleteEntity(EntityKey<?> entityKey);
+    void deleteEntity(EntityKey entityKey);
 
-    void insertDatabaseSnapshot(EntityKey<?> entityKey, EntityData EntityData);
+    void insertDatabaseSnapshot(EntityKey entityKey, EntityData EntityData);
 
-    EntityData getDatabaseSnapshot(EntityKey<?> entityKey);
+    EntityData getDatabaseSnapshot(EntityKey entityKey);
 
-    void insertEntityEntryMap(EntityKey<?> entityKey, EntityStatus entityStatus);
+    void insertEntityEntryMap(EntityKey entityKey, EntityStatus entityStatus);
 
-    EntityEntry getEntityEntryMap(EntityKey<?> entityKey);
+    EntityEntry getEntityEntryMap(EntityKey entityKey);
 
 }

@@ -1,7 +1,7 @@
 package persistence;
 
-import builder.dml.EntityData;
 import builder.dml.DMLColumnData;
+import builder.dml.EntityData;
 import jdbc.JdbcTemplate;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public <T> T find(Class<T> clazz, Object id) {
-        EntityKey<T> entityKey = new EntityKey<>(id, clazz);
+        EntityKey entityKey = new EntityKey(id, clazz);
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
         if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
@@ -46,8 +46,9 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void persist(Object entityInstance) {
         EntityData entityData = EntityData.createEntityData(entityInstance);
+        EntityKey entityKey = new EntityKey(entityData);
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.SAVING);
         this.entityPersister.persist(entityData);
-        EntityKey<?> entityKey = new EntityKey<>(entityData.getId(), entityData.getClazz());
         insertPersistenceContext(entityKey, entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
     }
@@ -55,33 +56,36 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void merge(Object entityInstance) {
         EntityData entityData = EntityData.createEntityData(entityInstance);
-        EntityKey<?> entityKey = new EntityKey<>(entityData.getId(), entityData.getClazz());
+        EntityKey entityKey = new EntityKey(entityData);
 
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
-        if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
-            EntityData diffBuilderData = checkDirtyCheck(entityData);
-
-            if (diffBuilderData.getColumns().isEmpty()) {
-                return;
-            }
-
-            this.entityPersister.merge(checkDirtyCheck(entityData));
-
-            insertPersistenceContext(entityKey, entityData);
+        if (!entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
+            return;
         }
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.SAVING);
+        EntityData diffBuilderData = checkDirtyCheck(entityData);
+        if (diffBuilderData.getColumns().isEmpty()) {
+            return;
+        }
+        this.entityPersister.merge(checkDirtyCheck(entityData));
+        insertPersistenceContext(entityKey, entityData);
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
     }
 
     @Override
     public void remove(Object entityInstance) {
         EntityData entityData = EntityData.createEntityData(entityInstance);
         this.entityPersister.remove(entityData);
-        this.persistenceContext.deleteEntity(new EntityKey<>(entityData.getId(), entityData.getClazz()));
-        this.persistenceContext.insertEntityEntryMap(new EntityKey<>(entityData.getId(), entityData.getClazz()), EntityStatus.DELETED);
+
+        EntityKey entityKey = new EntityKey(entityData);
+
+        this.persistenceContext.deleteEntity(entityKey);
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.DELETED);
     }
 
     private EntityData checkDirtyCheck(EntityData entityBuilderData) {
-        EntityKey<?> entityKey = new EntityKey<>(entityBuilderData.getId(), entityBuilderData.getClazz());
+        EntityKey entityKey = new EntityKey(entityBuilderData);
 
         EntityData snapshotEntityData = this.persistenceContext.getDatabaseSnapshot(entityKey);
 
@@ -90,7 +94,7 @@ public class EntityManagerImpl implements EntityManager {
         return entityBuilderData.changeColumns(differentColumns);
     }
 
-    private void insertPersistenceContext(EntityKey<?> entityKey, EntityData EntityData) {
+    private void insertPersistenceContext(EntityKey entityKey, EntityData EntityData) {
         this.persistenceContext.insertEntity(entityKey, EntityData);
         this.persistenceContext.insertDatabaseSnapshot(entityKey, EntityData);
     }
