@@ -37,6 +37,11 @@ public class PersistenceContextImpl implements PersistenceContext {
     }
 
     @Override
+    public void deleteDatabaseSnapshot(EntityKey entityKey) {
+        this.snapShotMap.remove(entityKey);
+    }
+
+    @Override
     public void insertEntityEntryMap(EntityKey entityKey, EntityStatus entityStatus) {
         EntityEntry entityEntry = new EntityEntry(entityStatus);
         this.entityEntryMap.put(entityKey, entityEntry);

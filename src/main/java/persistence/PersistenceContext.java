@@ -14,6 +14,8 @@ public interface PersistenceContext {
 
     EntityData getDatabaseSnapshot(EntityKey entityKey);
 
+    void deleteDatabaseSnapshot(EntityKey entityKey);
+
     void insertEntityEntryMap(EntityKey entityKey, EntityStatus entityStatus);
 
     EntityEntry getEntityEntryMap(EntityKey entityKey);

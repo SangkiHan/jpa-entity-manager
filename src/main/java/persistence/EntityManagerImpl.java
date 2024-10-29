@@ -34,6 +34,7 @@ public class EntityManagerImpl implements EntityManager {
             return clazz.cast(persistEntityData.getEntityInstance());
         }
 
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.LOADING);
         T findObject = this.entityLoader.find(clazz, id);
         EntityData entityData = EntityData.createEntityData(findObject);
 
@@ -47,8 +48,17 @@ public class EntityManagerImpl implements EntityManager {
     public void persist(Object entityInstance) {
         EntityData entityData = EntityData.createEntityData(entityInstance);
         EntityKey entityKey = new EntityKey(entityData);
+
+        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
+
+        if (entityEntry != null && !entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
+            return;
+        }
+
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.SAVING);
+
         this.entityPersister.persist(entityData);
+
         insertPersistenceContext(entityKey, entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
     }
@@ -60,15 +70,19 @@ public class EntityManagerImpl implements EntityManager {
 
         EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
 
-        if (!entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
+        if (entityEntry != null && !entityEntry.checkEntityStatus(EntityStatus.MANAGED)) {
             return;
         }
+
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.SAVING);
+
         EntityData diffBuilderData = checkDirtyCheck(entityData);
         if (diffBuilderData.getColumns().isEmpty()) {
             return;
         }
-        this.entityPersister.merge(checkDirtyCheck(entityData));
+
+        this.entityPersister.merge(diffBuilderData);
+
         insertPersistenceContext(entityKey, entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.MANAGED);
     }
@@ -76,12 +90,20 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void remove(Object entityInstance) {
         EntityData entityData = EntityData.createEntityData(entityInstance);
-        this.entityPersister.remove(entityData);
-
         EntityKey entityKey = new EntityKey(entityData);
 
-        this.persistenceContext.deleteEntity(entityKey);
+        EntityEntry entityEntry = this.persistenceContext.getEntityEntryMap(entityKey);
+
+        if (entityEntry != null && entityEntry.checkEntityStatus(EntityStatus.GONE)) {
+            return;
+        }
+
+        this.entityPersister.remove(entityData);
         this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.DELETED);
+
+        this.persistenceContext.deleteEntity(entityKey);
+        this.persistenceContext.deleteDatabaseSnapshot(entityKey);
+        this.persistenceContext.insertEntityEntryMap(entityKey, EntityStatus.GONE);
     }
 
     private EntityData checkDirtyCheck(EntityData entityBuilderData) {
