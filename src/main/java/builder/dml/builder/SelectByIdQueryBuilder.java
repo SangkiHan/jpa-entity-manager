@@ -1,6 +1,6 @@
 package builder.dml.builder;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 
 public class SelectByIdQueryBuilder {
 
@@ -10,16 +10,16 @@ public class SelectByIdQueryBuilder {
     private final static String VALUES = "{values}";
     private final static String ENTITY_PK_NAME = "{entityPkName}";
 
-    public String buildQuery(DMLBuilderData dmlBuilderData) {
-        return findByIdQuery(dmlBuilderData);
+    public String buildQuery(EntityData EntityData) {
+        return findByIdQuery(EntityData);
     }
 
     //findAll 쿼리문을 생성한다.
-    private String findByIdQuery(DMLBuilderData dmlBuilderData) {
-        return FIND_BY_ID_QUERY.replace(TABLE_NAME, dmlBuilderData.getTableName())
-                .replace(COLUMN_NAMES, dmlBuilderData.getColumnNames())
-                .replace(ENTITY_PK_NAME, dmlBuilderData.getPkNm())
-                .replace(VALUES, String.valueOf(dmlBuilderData.wrapString()));
+    private String findByIdQuery(EntityData EntityData) {
+        return FIND_BY_ID_QUERY.replace(TABLE_NAME, EntityData.getTableName())
+                .replace(COLUMN_NAMES, EntityData.getColumnNames())
+                .replace(ENTITY_PK_NAME, EntityData.getPkNm())
+                .replace(VALUES, String.valueOf(EntityData.wrapString()));
     }
 
 }

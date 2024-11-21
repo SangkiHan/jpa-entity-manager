@@ -1,6 +1,6 @@
 package persistence;
 
-import builder.dml.DMLBuilderData;
+import builder.dml.EntityData;
 import builder.dml.builder.DeleteQueryBuilder;
 import builder.dml.builder.InsertQueryBuilder;
 import builder.dml.builder.SelectByIdQueryBuilder;
@@ -22,18 +22,18 @@ public class EntityPersister {
     }
 
     //데이터를 반영한다.
-    public void persist(DMLBuilderData dmlBuilderData) {
-        jdbcTemplate.execute(insertQueryBuilder.buildQuery(dmlBuilderData));
+    public void persist(EntityData EntityData) {
+        jdbcTemplate.execute(insertQueryBuilder.buildQuery(EntityData));
     }
 
     //데이터를 수정한다.
-    public void merge(DMLBuilderData dmlBuilderData) {
-        jdbcTemplate.execute(updateQueryBuilder.buildQuery(dmlBuilderData));
+    public void merge(EntityData EntityData) {
+        jdbcTemplate.execute(updateQueryBuilder.buildQuery(EntityData));
     }
 
     //데이터를 제거한다.
-    public void remove(DMLBuilderData dmlBuilderData) {
-        jdbcTemplate.execute(deleteQueryBuilder.buildQuery(dmlBuilderData));
+    public void remove(EntityData EntityData) {
+        jdbcTemplate.execute(deleteQueryBuilder.buildQuery(EntityData));
     }
 
 }
