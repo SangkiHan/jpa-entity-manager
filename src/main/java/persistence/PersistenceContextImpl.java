@@ -1,57 +1,55 @@
 package persistence;
 
-import java.io.*;
-import java.lang.reflect.Field;
+import builder.dml.EntityData;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class PersistenceContextImpl implements PersistenceContext {
 
-    private final Map<EntityKey<?>, Object> entityMap = new HashMap<>();
-    private final Map<EntityKey<?>, Object> snapShotMap = new HashMap<>();
+    private final Map<EntityKey, EntityData> entityMap = new HashMap<>();
+    private final Map<EntityKey, EntityData> snapShotMap = new HashMap<>();
+    private final Map<EntityKey, EntityEntry> entityEntryMap = new HashMap<>();
 
     @Override
-    public Object findEntity(EntityKey<?> entityKey) {
+    public EntityData findEntity(EntityKey entityKey) {
         return entityMap.get(entityKey);
     }
 
     @Override
-    public void insertEntity(EntityKey<?> entityKey, Object object) {
-        this.entityMap.put(entityKey, deepCopy(object));
+    public void insertEntity(EntityKey entityKey, EntityData EntityData) {
+        this.entityMap.put(entityKey, EntityData);
     }
 
     @Override
-    public void deleteEntity(EntityKey<?> entityKey) {
+    public void deleteEntity(EntityKey entityKey) {
         this.entityMap.remove(entityKey);
     }
 
     @Override
-    public void insertDatabaseSnapshot(EntityKey<?> entityKey, Object object) {
-        this.snapShotMap.put(entityKey, deepCopy(object));
+    public void insertDatabaseSnapshot(EntityKey entityKey, EntityData EntityData) {
+        this.snapShotMap.put(entityKey, EntityData);
     }
 
     @Override
-    public Object getDatabaseSnapshot(EntityKey<?> entityKey) {
+    public EntityData getDatabaseSnapshot(EntityKey entityKey) {
         return this.snapShotMap.get(entityKey);
     }
 
-    private Object deepCopy(Object original) {
-        if (original == null) return null;
+    @Override
+    public void deleteDatabaseSnapshot(EntityKey entityKey) {
+        this.snapShotMap.remove(entityKey);
+    }
 
-        try {
-            Class<?> clazz = original.getClass();
-            Object copy = clazz.getDeclaredConstructor().newInstance();
+    @Override
+    public void insertEntityEntryMap(EntityKey entityKey, EntityStatus entityStatus) {
+        EntityEntry entityEntry = new EntityEntry(entityStatus);
+        this.entityEntryMap.put(entityKey, entityEntry);
+    }
 
-            for (Field field : clazz.getDeclaredFields()) {
-                field.setAccessible(true);
-
-                Object value = field.get(original);
-                field.set(copy, value);
-            }
-            return copy;
-        } catch (Exception e) {
-            throw new RuntimeException("Deep copy failed", e);
-        }
+    @Override
+    public EntityEntry getEntityEntryMap(EntityKey entityKey) {
+        return this.entityEntryMap.get(entityKey);
     }
 
 }
